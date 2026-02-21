@@ -1,14 +1,25 @@
 import 'package:flutter/material.dart';
+// import 'package:free_games_finder/app/data/database/database_helper.dart';
+// import 'package:free_games_finder/app/data/models/favorite_mode.dart';
+import 'package:free_games_finder/app/modules/controllers/favorite_controller.dart';
 import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../../data/models/games_model.dart';
+import 'package:free_games_finder/app/data/models/games_model.dart';
 
-class Detail extends StatelessWidget {
+class Detail extends StatefulWidget {
   const Detail({super.key});
+
+  @override
+  State<Detail> createState() => _DetailState();
+}
+
+class _DetailState extends State<Detail> {
+  DateTime? selectedDate;
 
   @override
   Widget build(BuildContext context) {
     final GamesModel game = Get.arguments as GamesModel;
+    final favoriteController = Get.put(FavoriteController());
 
     return Scaffold(
       body: CustomScrollView(
@@ -37,21 +48,13 @@ class Detail extends StatelessWidget {
                   CachedNetworkImage(
                     imageUrl: game.thumbnail,
                     fit: BoxFit.cover,
-                    placeholder: (context, url) =>
-                        const Center(child: CircularProgressIndicator()),
-                    errorWidget: (context, url, error) =>
-                        const Icon(Icons.error),
                   ),
                   const DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.bottomCenter,
                         end: Alignment.topCenter,
-                        colors: [
-                          Colors.black87,
-                          Colors.transparent,
-                        ],
-                        stops: [0.0, 0.5],
+                        colors: [Colors.black87, Colors.transparent],
                       ),
                     ),
                   ),
@@ -59,77 +62,140 @@ class Detail extends StatelessWidget {
               ),
             ),
           ),
+
+          /// ================= CONTENT =================
           SliverList(
-            delegate: SliverChildListDelegate(
-              [
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Genre & Platform
-                      Row(
-                        children: [
-                          Chip(
-                            backgroundColor: Colors.blueGrey,
-                            label: Text(
-                              game.genre,
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Chip(
-                            backgroundColor: Colors.blueGrey,
-                            label: Text(
-                              game.platform ?? 'Unknown Platform',
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
+            delegate: SliverChildListDelegate([
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
 
-                      const Text(
-                        "Description",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                    /// Genre & Platform
+                    Row(
+                      children: [
+                        Chip(
+                          backgroundColor: Colors.blueGrey,
+                          label: Text(
+                            game.genre,
+                            style: const TextStyle(color: Colors.white),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        game.description ?? 'No description available.',
-                        style: const TextStyle(fontSize: 14, height: 1.5),
-                      ),
-                      const SizedBox(height: 16),
+                        const SizedBox(width: 8),
+                        Chip(
+                          backgroundColor: Colors.blueGrey,
+                          label: Text(
+                            game.platform,
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
 
-                      const Divider(),
-                      const SizedBox(height: 8),
+                    const SizedBox(height: 20),
 
-                      _buildInfoRow('Developer', game.developer ?? 'Unknown'),
-                      const SizedBox(height: 8),
-                      _buildInfoRow('Publisher', game.publisher ?? 'Unknown'),
-                      const SizedBox(height: 8),
-                      _buildInfoRow('Release Date', game.releaseDate ?? 'Unknown'),
-                    ],
-                  ),
+                    /// ================= PLAY DATE =================
+                    const Text(
+                      "Play Date",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            selectedDate == null
+                                ? "Belum pilih tanggal"
+                                : "${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}",
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: () async {
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: DateTime.now(),
+                              firstDate: DateTime.now(),
+                              lastDate: DateTime(2100),
+                            );
+
+                            if (picked != null) {
+                              setState(() {
+                                selectedDate = picked;
+                              });
+                            }
+                          },
+                          child: const Text("Pilih Tanggal"),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    /// DESCRIPTION
+                    const Text(
+                      "Description",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+                    Text(
+                      game.description,
+                      style: const TextStyle(fontSize: 14, height: 1.5),
+                    ),
+
+                    const SizedBox(height: 16),
+                    const Divider(),
+                    const SizedBox(height: 8),
+
+                    _buildInfoRow('Developer', game.developer),
+                    const SizedBox(height: 8),
+                    _buildInfoRow('Publisher', game.publisher),
+                    const SizedBox(height: 8),
+                    _buildInfoRow('Release Date', game.releaseDate),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ]),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        tooltip: "Add to Favorite",
-        onPressed: () {
-          Get.snackbar(
-            "Favorite",
-            "${game.title} ditambahkan ke favorit (Fitur segera hadir!)",
-          );
-        },
-        backgroundColor: Colors.blueAccent,
-        child: const Icon(Icons.favorite_border, color: Colors.white),
-      ),
+
+      /// ================= FAB =================
+      floatingActionButton: Obx(() {
+        final isFav = favoriteController.isFavorite(game.id);
+
+        return FloatingActionButton(
+          tooltip: "Add to Favorite",
+          onPressed: () {
+            if (selectedDate == null) {
+              Get.snackbar(
+                "Tanggal belum dipilih",
+                "Silakan pilih tanggal mau main dulu",
+              );
+              return;
+            }
+
+            favoriteController.insertOrUpdateFavorite(
+              game,
+              selectedDate!,
+            );
+          },
+          backgroundColor: Colors.blueAccent,
+          child: Icon(
+            isFav ? Icons.favorite : Icons.favorite_border,
+            color: Colors.white,
+          ),
+        );
+      }),
     );
   }
 
