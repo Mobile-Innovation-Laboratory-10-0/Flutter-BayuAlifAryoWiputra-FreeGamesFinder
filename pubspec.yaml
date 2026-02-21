@@ -41,6 +41,13 @@ dependencies:
   hive_flutter: ^1.1.0
   google_fonts: ^8.0.1
 
+  # database purpose
+  sqflite: ^2.3.0
+  path: ^1.8.3
+
+  # intl
+  intl: ^0.18.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
