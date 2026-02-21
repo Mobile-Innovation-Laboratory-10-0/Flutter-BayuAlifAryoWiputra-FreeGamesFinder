@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:free_games_finder/app/modules/home/views/favorites.dart';
 import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../controllers/home_controller.dart';
@@ -19,7 +20,8 @@ class Home extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.favorite),
             onPressed: () {
-              Get.snackbar("Info", "Fitur Library akan segera hadir!");
+              // Get.snackbar("Info", "Fitur Library akan segera hadir!");
+              Get.to(() => Favorites());
             },
           ),
         ],
