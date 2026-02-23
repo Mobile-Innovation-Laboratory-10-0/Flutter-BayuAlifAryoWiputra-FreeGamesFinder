@@ -1,5 +1,4 @@
 import 'package:free_games_finder/app/data/models/favorite_mode.dart';
-// import 'package:free_games_finder/app/data/models/games_model.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -11,7 +10,7 @@ class DatabaseHelper {
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    _database = await _initDB('favorites.db');
+    _database = await _initDB('free_games_v2.db');
     return _database!;
   }
 
@@ -19,7 +18,7 @@ class DatabaseHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
-    return await openDatabase(path, version: 2, onCreate: _createDB);
+    return await openDatabase(path, version: 1, onCreate: _createDB);
   }
 
   Future _createDB(Database db, int version) async {
@@ -33,9 +32,32 @@ class DatabaseHelper {
       createdAt TEXT,
       updatedAt TEXT
     )
-  ''');
+    ''');
+
+
+    await db.execute('''
+    CREATE TABLE users(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE,
+      password TEXT
+    )
+    ''');
+
+
+    await db.execute('''
+    CREATE TABLE comments(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      gameId INTEGER,
+      username TEXT,
+      comment TEXT,
+      createdAt TEXT
+    )
+    ''');
   }
 
+  // ==========================================
+  // FUNGSI FAVORITES 
+  // ==========================================
   Future<int> insertFavorite(FavoriteModel favorite) async {
     final db = await instance.database;
     return await db.insert(
@@ -65,13 +87,56 @@ class DatabaseHelper {
     return await db.query('favorites');
   }
 
-  // Future<bool> isFavorite(int id) async {
-  //   final db = await instance.database;
-  //   final result = await db.query(
-  //     'favorites',
-  //     where: 'id = ?',
-  //     whereArgs: [id],
-  //   );
-  //   return result.isNotEmpty;
-  // }
+  // ==========================================
+  // FUNGSI AUTENTIKASI (LOGIN & REGISTER)
+  // ==========================================
+  
+  Future<int> registerUser(String username, String password) async {
+    final db = await instance.database;
+    try {
+      return await db.insert(
+        'users',
+        {'username': username, 'password': password},
+      );
+    } catch (e) {
+      return -1; 
+    }
+  }
+
+  Future<Map<String, dynamic>?> loginUser(String username, String password) async {
+    final db = await instance.database;
+    final result = await db.query(
+      'users',
+      where: 'username = ? AND password = ?',
+      whereArgs: [username, password],
+    );
+
+    if (result.isNotEmpty) {
+      return result.first;
+    }
+    return null;
+  }
+
+  // ==========================================
+  // FUNGSI KOMENTAR
+  // ==========================================
+  Future<int> addComment(int gameId, String username, String comment) async {
+    final db = await instance.database;
+    return await db.insert('comments', {
+      'gameId': gameId,
+      'username': username,
+      'comment': comment,
+      'createdAt': DateTime.now().toIso8601String(), 
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> getCommentsByGame(int gameId) async {
+    final db = await instance.database;
+    return await db.query(
+      'comments',
+      where: 'gameId = ?',
+      whereArgs: [gameId],
+      orderBy: 'createdAt DESC', 
+    );
+  }
 }
