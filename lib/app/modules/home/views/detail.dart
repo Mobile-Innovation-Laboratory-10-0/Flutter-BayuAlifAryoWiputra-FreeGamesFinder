@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:free_games_finder/app/data/database/database_helper.dart';
 import 'package:free_games_finder/app/modules/controllers/favorite_controller.dart';
-import 'package:free_games_finder/app/modules/controllers/auth_controller.dart'; // Import AuthController
+import 'package:free_games_finder/app/modules/controllers/auth_controller.dart'; 
 import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:free_games_finder/app/data/models/games_model.dart';
@@ -16,7 +16,6 @@ class Detail extends StatefulWidget {
 class _DetailState extends State<Detail> {
   DateTime? selectedDate;
   
-  // Variabel untuk fitur komentar
   late GamesModel game;
   final TextEditingController commentController = TextEditingController();
   List<Map<String, dynamic>> commentsList = [];
@@ -29,10 +28,9 @@ class _DetailState extends State<Detail> {
   void initState() {
     super.initState();
     game = Get.arguments as GamesModel;
-    _loadComments(); // Panggil komentar saat halaman dibuka
+    _loadComments(); 
   }
 
-  // Fungsi mengambil komentar dari database
   Future<void> _loadComments() async {
     final data = await DatabaseHelper.instance.getCommentsByGame(game.id);
     setState(() {
@@ -41,11 +39,9 @@ class _DetailState extends State<Detail> {
     });
   }
 
-  // Fungsi mengirim komentar
   Future<void> _submitComment() async {
     if (commentController.text.trim().isEmpty) return;
 
-    // Pastikan user sudah login
     if (!authController.isLoggedIn.value) {
       Get.snackbar("Gagal", "Mas Bayu harus login dulu untuk memberi komentar!");
       return;
@@ -58,7 +54,7 @@ class _DetailState extends State<Detail> {
     );
 
     commentController.clear();
-    _loadComments(); // Refresh daftar komentar
+    _loadComments(); 
   }
 
   @override
@@ -108,7 +104,6 @@ class _DetailState extends State<Detail> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Genre & Platform
                     Row(
                       children: [
                         Chip(
@@ -172,11 +167,9 @@ class _DetailState extends State<Detail> {
                     const Divider(thickness: 2),
                     const SizedBox(height: 16),
 
-                    /// ================= BAGIAN KOMENTAR =================
                     const Text("Komentar", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 16),
                     
-                    // Input Komentar
                     Row(
                       children: [
                         Expanded(
@@ -200,8 +193,6 @@ class _DetailState extends State<Detail> {
                       ],
                     ),
                     const SizedBox(height: 16),
-
-                    // List Komentar
                     isLoadingComments 
                         ? const Center(child: CircularProgressIndicator())
                         : commentsList.isEmpty
@@ -237,16 +228,33 @@ class _DetailState extends State<Detail> {
         ],
       ),
 
+      /// ================= FAB =================
       floatingActionButton: Obx(() {
         final isFav = favoriteController.isFavorite(game.id);
+
         return FloatingActionButton(
           tooltip: "Add to Favorite",
           onPressed: () {
+            if (!authController.isLoggedIn.value) {
+              Get.snackbar(
+                "Akses Ditolak", 
+                "Kamu harus login dulu untuk menambahkan game ke favorit!",
+                backgroundColor: Colors.redAccent,
+                colorText: Colors.white,
+              );
+              return; 
+            }
             if (selectedDate == null) {
-              Get.snackbar("Tanggal belum dipilih", "Silakan pilih tanggal mau main dulu");
+              Get.snackbar(
+                "Tanggal belum dipilih",
+                "Silakan pilih tanggal mau main dulu",
+              );
               return;
             }
-            favoriteController.insertOrUpdateFavorite(game, selectedDate!);
+            favoriteController.insertOrUpdateFavorite(
+              game,
+              selectedDate!,
+            );
           },
           backgroundColor: Colors.blueAccent,
           child: Icon(

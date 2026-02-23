@@ -32,7 +32,6 @@ class LoginView extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                // Tombol Register
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.grey),
                   onPressed: () async {
@@ -45,14 +44,12 @@ class LoginView extends StatelessWidget {
                   },
                   child: const Text("Register", style: TextStyle(color: Colors.white)),
                 ),
-                // Tombol Login
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
                   onPressed: () async {
                     bool success = await authController.login(userController.text, passController.text);
                     if (success) {
                       Get.snackbar("Halo!", "Selamat datang ${userController.text}");
-                      Get.back(); // Kembali ke halaman sebelumnya setelah login
                     } else {
                       Get.snackbar("Error", "Username atau Password salah.");
                     }
