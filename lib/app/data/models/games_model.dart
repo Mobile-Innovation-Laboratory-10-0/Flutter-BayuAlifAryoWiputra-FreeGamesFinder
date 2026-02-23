@@ -7,7 +7,6 @@ class GamesModel {
   final String platform;
   final String publisher;
 
-  // tambahan
   final String developer;
   final String releaseDate;
   final String gameUrl;
@@ -35,7 +34,6 @@ class GamesModel {
       platform: json['platform'] ?? 'PC',
       publisher: json['publisher'] ?? 'Unknown',
 
-      // mapping tambahan
       developer: json['developer'] ?? 'Unknown',
       releaseDate: json['release_date'] ?? 'Unknown',
       gameUrl: json['game_url'] ?? '',

@@ -1,102 +1,102 @@
 import 'package:flutter/material.dart';
+import 'package:free_games_finder/app/data/models/games_model.dart';
+import 'package:free_games_finder/app/modules/home/views/detail.dart';
 import 'package:get/get.dart';
-import 'package:free_games_finder/app/modules/controllers/favorite_controller.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:intl/intl.dart';
+import '../../controllers/favorite_controller.dart';
+import '../../widgets/custom_search_bar.dart';
 
 class Favorites extends StatelessWidget {
   Favorites({super.key});
 
-  final FavoriteController controller =
-      Get.put(FavoriteController());
+  final FavoriteController controller = Get.put(FavoriteController());
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Favorite Games"),
-      ),
-      body: Obx(() {
-        if (controller.favoriteGames.isEmpty) {
-          return const Center(
-            child: Text("Belum ada game favorit"),
-          );
-        }
+      body: Column(
+        children: [
+          CustomSearchBar(
+            hintText: "Cari di favorit...",
+            onChanged: (val) => controller.searchQuery.value = val,
+          ),
+          Expanded(
+            child: Obx(() {
+              final list = controller.filteredFavorites; 
+              
+              if (list.isEmpty) {
+                return const Center(child: Text("Favorit kosong"));
+              }
 
-        return ListView.builder(
-          itemCount: controller.favoriteGames.length,
-          itemBuilder: (context, index) {
-            final fav = controller.favoriteGames[index];
-
-            final formattedDate = DateFormat(
-              'dd MMM yyyy',
-            ).format(DateTime.parse(fav.playDate));
-
-            return Card(
-              margin: const EdgeInsets.all(12),
-              child: ListTile(
-                leading: CachedNetworkImage(
-                  imageUrl: fav.thumbnail,
-                  width: 60,
-                  fit: BoxFit.cover,
-                ),
-
-                title: Text(fav.title),
-
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(fav.genre),
-                    const SizedBox(height: 4),
-                    Text(
-                      "Play Date: $formattedDate",
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blueAccent,
-                      ),
+              return ListView.builder(
+                itemCount: list.length,
+                itemBuilder: (context, index) {
+                  final fav = list[index];
+                  
+                  return Card(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
                     ),
-                  ],
-                ),
-
-                /// EDIT & DELETE BUTTON
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.edit_calendar,
-                          color: Colors.green),
-                      onPressed: () async {
-                        final picked = await showDatePicker(
-                          context: context,
-                          initialDate:
-                              DateTime.parse(fav.playDate),
-                          firstDate: DateTime.now(),
-                          lastDate: DateTime(2100),
+                    child: ListTile(
+                      onTap: () {
+                        final gameData = GamesModel(
+                          id: fav.gameId,
+                          title: fav.title,
+                          thumbnail: fav.thumbnail,
+                          genre: fav.genre,
+                          description: "Detail lengkap bisa dilihat di menu Home.",
+                          platform: "Tersedia", 
+                          publisher: "Unknown",
+                          developer: "Unknown",
+                          releaseDate: "Unknown",
+                          gameUrl: "",
                         );
 
-                        if (picked != null) {
-                          controller.updatePlayDate(
-                            fav,
-                            picked,
+                        Get.to(() => const Detail(), arguments: gameData);
+                      },
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: CachedNetworkImage(
+                          imageUrl: fav.thumbnail,
+                          width: 60,
+                          height: 60,
+                          fit: BoxFit.cover,
+                          errorWidget: (context, url, error) => const Icon(Icons.broken_image),
+                        ),
+                      ),
+                      title: Text(
+                        fav.title,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(fav.genre),
+                      trailing: IconButton(
+                        icon: const Icon(
+                          Icons.favorite,
+                          color: Colors.pinkAccent,
+                        ),
+                        onPressed: () {
+                          Get.defaultDialog(
+                            title: "Hapus Favorit",
+                            middleText: "Hapus ${fav.title} dari daftar favorit?",
+                            textConfirm: "Ya, Hapus",
+                            confirmTextColor: Colors.white,
+                            onConfirm: () {
+                              controller.deleteFavorite(fav.gameId);
+                              Get.back();
+                            },
+                            textCancel: "Batal",
                           );
-                        }
-                      },
+                        },
+                      ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.delete,
-                          color: Colors.red),
-                      onPressed: () {
-                        controller.deleteFavorite(
-                            fav.gameId);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      }),
+                  );
+                },
+              );
+            }),
+          ),
+        ],
+      ),
     );
   }
 }

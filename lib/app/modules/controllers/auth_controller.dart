@@ -19,7 +19,10 @@ class AuthController extends GetxController {
   }
 
   Future<bool> login(String username, String password) async {
-    final user = await DatabaseHelper.instance.loginUser(username, password);
+    String cleanUser = username.trim();
+    String cleanPass = password.trim();
+
+    final user = await DatabaseHelper.instance.loginUser(cleanUser, cleanPass);
     if (user != null) {
       isLoggedIn.value = true;
       currentUsername.value = user['username'];
@@ -34,7 +37,10 @@ class AuthController extends GetxController {
   }
 
   Future<bool> register(String username, String password) async {
-    final id = await DatabaseHelper.instance.registerUser(username, password);
+    String cleanUser = username.trim();
+    String cleanPass = password.trim();
+
+    final id = await DatabaseHelper.instance.registerUser(cleanUser, cleanPass);
     return id != -1; 
   }
 
